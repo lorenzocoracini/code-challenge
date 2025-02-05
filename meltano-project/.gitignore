@@ -1,0 +1,4 @@
+desafio_venv/*
+
+meltano-project/.meltano/*
+.env

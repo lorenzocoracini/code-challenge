@@ -1,0 +1,360 @@
+version: 1
+default_environment: dev
+project_id: f0c9c99f-6c14-4efb-a463-79694e3d62a0
+environments:
+- name: dev
+- name: staging
+- name: prod
+plugins:
+  extractors:
+    # extração do postgres
+  - name: tap-postgres
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-postgres.git
+    config:
+      host: localhost
+      port: 5433
+      user: northwind_user
+      password: thewindisblowing
+      database: northwind
+      default_replication_method: LOG_BASED
+      filter_schemas:
+      - public
+
+
+    # extração do csv de order details da pasta data
+  - name: tap-csv-order-details-data
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: order_details
+        path: ../data/order_details.csv
+        keys: [order_id]
+
+    # extracao de order details do localsystem
+  - name: tap-csv-order-details-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: order_details
+        path: data/csv/order_details.csv
+        #keys: [order_id, product_id, unit_price,quantity,discount]
+        keys: [order_id]
+        delimiter: ','
+
+    # extracao de  categories do localsystem
+  - name: tap-csv-categories-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: categories
+        path: data/postgres/public-categories.csv
+        keys: [category_id]
+        delimiter: ','
+
+  # extracao de  customers do localsystem
+  - name: tap-csv-customers-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: customers
+        path: data/postgres/public-customers.csv
+        keys: [customer_id]
+        delimiter: ','
+
+  # extracao de  employee_territories do localsystem
+  - name: tap-csv-employee_territories-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: employee_territories
+        path: data/postgres/public-employee_territories.csv
+        keys: [employee_id]
+        delimiter: ','
+
+  # extracao de  orders do localsystem
+  - name: tap-csv-orders-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: orders
+        path: data/postgres/public-orders.csv
+        keys: [order_id]
+        delimiter: ','
+
+  # extracao de products do localsystem
+  - name: tap-csv-products-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: products
+        path: data/postgres/public-products.csv
+        keys: [product_id]
+        delimiter: ','
+
+
+  # extração de shippers
+  - name: tap-csv-shippers-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: shippers
+        path: data/postgres/public-shippers.csv
+        keys: [shipper_id]
+        delimiter: ','
+
+  # extração de suppliers
+  - name: tap-csv-suppliers-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: suppliers
+        path: data/postgres/public-suppliers.csv
+        keys: [supplier_id]
+        delimiter: ','
+
+  # extração de territories
+  - name: tap-csv-territories-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: territories
+        path: data/postgres/public-territories.csv
+        keys: [territory_id]
+        delimiter: ','
+
+  # extração de regions
+  - name: tap-csv-regions-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: region
+        path: data/postgres/public-region.csv
+        keys: [region_id]
+        delimiter: ','
+
+  # extração de us_states
+  - name: tap-csv-us-states-localsystem
+    inherit_from: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+      - entity: us_states
+        path: data/postgres/public-us_states.csv
+        keys: [state_id]
+        delimiter: ','
+
+
+
+
+
+  loaders:
+    # carregamento do banco para csv
+  - name: target-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/target-csv.git
+    config:
+      output_path: data/postgres/
+      file_naming_scheme: '{stream_name}.csv'
+      validate_records: false
+
+    # carregamento de order details para csv
+  - name: target-csv-order-details
+    inherit_from: target-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/target-csv.git
+    config:
+      destination_path: data/csv/order_details.csv
+      validate_records: false
+
+    # carregamento dos csv order detail no banco completo
+  - name: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: order_details
+      default_target_schema: public
+
+    # carregamento dos csv categories no banco completo
+  - name: target-postgres-categories
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: categories
+      default_target_schema: public
+
+    # carregamento dos csv customers no banco completo
+  - name: target-postgres-customers
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: customers
+      default_target_schema: public
+
+
+    # carregamento dos csv orders no banco completo
+  - name: target-postgres-orders
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: orders
+      default_target_schema: public
+
+
+    # carregamento dos csv employee_territories no banco completo
+  - name: target-postgres-employee_territories
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: employee_territories
+      default_target_schema: public
+
+    # carregamento dos csv products no banco completo
+  - name: target-postgres-products
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: products
+      default_target_schema: public
+
+  # carregamento de shippers
+  - name: target-postgres-shippers
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: shippers
+      default_target_schema: public
+
+  # carregamento de suppliers
+  - name: target-postgres-suppliers
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: suppliers
+      default_target_schema: public
+
+  # carregamento de territories
+  - name: target-postgres-territories
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: territories
+      default_target_schema: public
+
+  # carregamento de regions
+  - name: target-postgres-regions
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: regions
+      default_target_schema: public
+
+  # carregamento de us_states
+  - name: target-postgres-us-states
+    inherit_from: target-postgres
+    variant: transferwise
+    pip_url: pipelinewise-target-postgres
+    config:
+      host: localhost
+      port: 5434
+      user: northwind_user
+      password: thewindisblowing
+      dbname: northwind_full
+      table_name: us_states
+      default_target_schema: public
+
+  files:
+  - name: files-airflow
+    variant: meltano
+    pip_url: git+https://github.com/meltano/files-airflow.git
+  utilities:
+  - name: airflow
+    variant: apache
+    pip_url: git+https://github.com/meltano/airflow-ext.git@main apache-airflow==2.8.1
+      --constraint 
+      https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-no-providers-${MELTANO__PYTHON_VERSION}.txt
+    config:
+      webserver:
+        web_server_port: 8081

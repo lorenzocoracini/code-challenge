@@ -1,1 +1,3 @@
-venv/
+desafio_venv
+desafio_venv/
+meltano-project/.meltano/
