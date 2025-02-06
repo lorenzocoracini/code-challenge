@@ -24,7 +24,7 @@ docker-compose up -d
 
 4. Subir dump do banco postgres final que receberá todos dados.
 ```
-psql -h localhost -p 5434 -U northwind_user -d northwind_full -f northwind_full_sem_dado_dump.sql
+cat northwind_full_sem_dado_dump.sql | docker-compose exec -T db_full psql -U northwind_user -d northwind_full
 ```
    
 5. Entrar no Projeto meltano e rodar os comandos:
