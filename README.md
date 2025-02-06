@@ -41,7 +41,7 @@ meltano invoke airflow users create -u user -p 123 --role Admin -e email@gmail.c
 ```
 8. Ajustar caminho da pasta da variável MELTANO_PROJECT_DIR:
 ```
-Ir no arquivo dag_meltano.y localizado em: meltano-project/orchestrate/airflow/dags,
+Ir no arquivo dag_meltano.py localizado em: meltano-project/orchestrate/airflow/dags/dag_meltano.py,
 e editar variável 'MELTANO_PROJECT_DIR', colocando o caminho que está o projeto meltano.
 ```
 9. inicializar webserver:
