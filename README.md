@@ -50,7 +50,7 @@ meltano invoke airflow webserver
 ```
 10. Em outro terminal rodar o scheduler:
 ```
-meltano invoke airflow webserver
+meltano invoke airflow scheduler
 ```
 
 11. Abrir UI do airflow em:
